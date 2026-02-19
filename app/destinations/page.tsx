@@ -937,7 +937,7 @@ export default function StationsPage() {
                     component="button"
                     onClick={() => setCurrentRecentDestSlide(index)}
                     className={`rounded-full transition-colors duration-200 ${
-                      index === currentRecentDestSlide ? 'bg-white' : 'bg-white/50'
+                      index === currentRecentDestSlide ? 'bg-[#373737]' : 'bg-[#373737]/30'
                     }`}
                     sx={{ width: vw(12, 'mobile'), height: vw(12, 'mobile') }}
                   />
@@ -1115,7 +1115,7 @@ export default function StationsPage() {
                     component="button"
                     onClick={() => setCurrentRecentDestSlide(index)}
                     className={`rounded-full transition-colors duration-200 ${
-                      index === currentRecentDestSlide ? 'bg-white' : 'bg-white/50'
+                      index === currentRecentDestSlide ? 'bg-[#373737]' : 'bg-[#373737]/30'
                     }`}
                     sx={{ width: vw(12), height: vw(12) }}
                   />

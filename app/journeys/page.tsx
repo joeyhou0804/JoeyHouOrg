@@ -1009,7 +1009,7 @@ export default function JourneysPage() {
                     component="button"
                     onClick={() => setCurrentRecentJourneySlide(index)}
                     className={`rounded-full transition-colors duration-200 ${
-                      index === currentRecentJourneySlide ? 'bg-white' : 'bg-white/50'
+                      index === currentRecentJourneySlide ? 'bg-[#373737]' : 'bg-[#373737]/30'
                     }`}
                     sx={{ width: vw(12, 'mobile'), height: vw(12, 'mobile') }}
                   />
@@ -1205,7 +1205,7 @@ export default function JourneysPage() {
                     component="button"
                     onClick={() => setCurrentRecentJourneySlide(index)}
                     className={`rounded-full transition-colors duration-200 ${
-                      index === currentRecentJourneySlide ? 'bg-white' : 'bg-white/50'
+                      index === currentRecentJourneySlide ? 'bg-[#373737]' : 'bg-[#373737]/30'
                     }`}
                     sx={{ width: vw(12), height: vw(12) }}
                   />
