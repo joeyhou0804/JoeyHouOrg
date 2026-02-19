@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import Box from '@mui/material/Box'
 import dynamic from 'next/dynamic'
 import Fuse from 'fuse.js'
@@ -96,6 +97,10 @@ export default function StationsPage() {
   const [isMapFiltersContext, setIsMapFiltersContext] = useState(false)
   const lastShownFilterRef = useRef<string>('')
   const listSectionRef = useRef<HTMLDivElement>(null)
+
+  // Recent destinations carousel state
+  const [currentRecentDestSlide, setCurrentRecentDestSlide] = useState(0)
+  const [isRecentDestTransitioning, setIsRecentDestTransitioning] = useState(false)
 
   const itemsPerPage = 12
 
@@ -531,6 +536,38 @@ export default function StationsPage() {
     }, 150)
   }
 
+  // Recent destinations carousel data (first 8 destinations)
+  const recentPlaces = useMemo(() => {
+    if (!destinations.length) return []
+    return destinations
+      .slice(0, 8)
+      .map(destination => ({
+        id: destination.id,
+        name: destination.name,
+        nameCN: destination.nameCN,
+        date: destination.date,
+        journeyName: destination.journeyName,
+        journeyNameCN: destination.journeyNameCN,
+        image: destination.images && destination.images.length > 0 ? destination.images[0] : ''
+      }))
+  }, [destinations])
+
+  const nextRecentDestSlide = () => {
+    setIsRecentDestTransitioning(true)
+    setTimeout(() => {
+      setCurrentRecentDestSlide((prev) => (prev + 1) % recentPlaces.length)
+      setIsRecentDestTransitioning(false)
+    }, 150)
+  }
+
+  const prevRecentDestSlide = () => {
+    setIsRecentDestTransitioning(true)
+    setTimeout(() => {
+      setCurrentRecentDestSlide((prev) => (prev - 1 + recentPlaces.length) % recentPlaces.length)
+      setIsRecentDestTransitioning(false)
+    }, 150)
+  }
+
   if (isLoading) {
     return (
       <>
@@ -586,6 +623,17 @@ export default function StationsPage() {
       <style jsx>{`
         .destination-search-input::placeholder {
           color: #F6F6F6;
+        }
+        @keyframes moveRight {
+          0% { background-position: 0% 0%; }
+          100% { background-position: 100% 0%; }
+        }
+        @keyframes slide-in {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(0); }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-in-out forwards;
         }
       `}</style>
       <ViewHintsDrawer
@@ -675,6 +723,409 @@ export default function StationsPage() {
           sx={{ display: { xs: 'block', md: 'none' } }}
         />
       </Box>
+
+      {/* Recent Destinations Carousel Section */}
+      {recentPlaces.length > 0 && (
+      <Box
+        component="section"
+        className="w-full"
+        sx={{
+          paddingTop: rvw(48, 96),
+          paddingBottom: rvw(48, 96),
+          backgroundImage: 'url(/images/backgrounds/homepage_background_2.webp)',
+          backgroundRepeat: 'repeat',
+          backgroundSize: { xs: `${vw(200, 'mobile')} auto`, md: `${vw(200)} auto` },
+          animation: { xs: 'moveRight 20s linear infinite', md: 'moveRight 60s linear infinite' },
+        }}
+      >
+        <Box sx={{ maxWidth: { xs: 'none', md: vw(1280) }, marginLeft: 'auto', marginRight: 'auto', paddingLeft: rvw(16, 32), paddingRight: rvw(16, 32) }}>
+          {/* Desktop: Title and Description */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginBottom: vw(64), marginTop: vw(32) }}>
+            <MixedText
+              text={locale === 'zh' ? '最新足迹' : 'Recent Destinations'}
+              chineseFont="MarioFontTitleChinese, sans-serif"
+              englishFont="MarioFontTitle, sans-serif"
+              fontSize={vw(64)}
+              color="#373737"
+              component="h2"
+              sx={{
+                margin: 0,
+                marginBottom: vw(16)
+              }}
+            />
+            <MixedText
+              text={locale === 'zh' ? '来看我最近几次的旅游目的地吧！' : 'Check out the destinations I visited most recently!'}
+              chineseFont="MarioFontChinese, sans-serif"
+              englishFont="MarioFont, sans-serif"
+              fontSize={vw(28)}
+              color="#373737"
+              component="p"
+              sx={{ margin: 0, textAlign: 'center' }}
+            />
+          </Box>
+
+          {/* Mobile: Title and Description */}
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginBottom: vw(64, 'mobile'), marginTop: vw(16, 'mobile') }}>
+            <MixedText
+              text={locale === 'zh' ? '最新足迹' : 'Recent Destinations'}
+              chineseFont="MarioFontTitleChinese, sans-serif"
+              englishFont="MarioFontTitle, sans-serif"
+              fontSize={vw(40, 'mobile')}
+              color="#373737"
+              component="h3"
+              sx={{
+                margin: 0,
+                marginBottom: vw(8, 'mobile')
+              }}
+            />
+            <MixedText
+              text={locale === 'zh' ? '来看我最近几次的旅游目的地吧！' : 'Check out the destinations I visited most recently!'}
+              chineseFont="MarioFontChinese, sans-serif"
+              englishFont="MarioFont, sans-serif"
+              fontSize={vw(16, 'mobile')}
+              color="#373737"
+              component="p"
+              sx={{
+                margin: 0,
+                textAlign: 'center',
+                paddingX: vw(16, 'mobile')
+              }}
+            />
+          </Box>
+
+          {/* XS Layout - Card Style */}
+          <Box sx={{ display: { xs: 'block', md: 'none' }, position: 'relative', width: '100vw', left: '50%', marginLeft: '-50vw', minHeight: vw(500, 'mobile'), zIndex: 10, padding: 0 }}>
+            <Box sx={{ position: 'relative', width: '100vw', margin: '0', padding: '0', display: 'flex', flexDirection: 'column-reverse', overflow: 'visible' }}>
+              {/* Destination Image */}
+              <Box
+                sx={{
+                  position: 'relative',
+                  width: '75%',
+                  aspectRatio: '1',
+                  borderRadius: vw(20, 'mobile'),
+                  overflow: 'hidden',
+                  zIndex: 10,
+                  boxShadow: `0 ${vw(4, 'mobile')} ${vw(6, 'mobile')} rgba(0, 0, 0, 0.1)`,
+                  marginTop: vw(-48, 'mobile'),
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                }}
+              >
+                <Box
+                  component="img"
+                  src={recentPlaces[currentRecentDestSlide]?.image || ''}
+                  alt={recentPlaces[currentRecentDestSlide]?.name}
+                  sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </Box>
+
+              {/* Card Background */}
+              <Box sx={{ position: 'relative', zIndex: 5 }}>
+                <Box
+                  component="img"
+                  src="/images/destinations/hints/map_view_hint_card_xs_1.webp"
+                  alt="Card"
+                  sx={{ width: '100vw', height: 'auto', display: 'block' }}
+                />
+              </Box>
+
+              {/* Title Section */}
+              <Box sx={{ position: 'absolute', top: '0%', left: '50%', transform: 'translate(-50%, -50%)', width: '90%', overflow: 'visible', zIndex: 15 }}>
+                <Box
+                  component="img"
+                  src="/images/destinations/hints/map_view_hint_title.webp"
+                  alt="Location"
+                  sx={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+                <MixedText
+                  text={locale === 'zh' && recentPlaces[currentRecentDestSlide]?.nameCN ? recentPlaces[currentRecentDestSlide]?.nameCN : recentPlaces[currentRecentDestSlide]?.name || ''}
+                  chineseFont="MarioFontTitleChinese, sans-serif"
+                  englishFont="MarioFontTitle, sans-serif"
+                  fontSize={vw(28, 'mobile')}
+                  color="#FFD701"
+                  component="h3"
+                  sx={{
+                    margin: 0,
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'center',
+                    width: '100%'
+                  }}
+                />
+              </Box>
+
+              {/* Date */}
+              <Box sx={{ position: 'absolute', top: '10%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', textAlign: 'center', zIndex: 15 }}>
+                <Box component="p" sx={{ fontFamily: locale === 'zh' ? 'MarioFontChinese, sans-serif' : 'MarioFont, sans-serif', fontSize: vw(16, 'mobile'), color: '#373737', marginBottom: 0, marginTop: 0, lineHeight: '1.4' }}>
+                  {recentPlaces[currentRecentDestSlide]?.date || ''}
+                </Box>
+              </Box>
+
+              {/* View Details Button */}
+              <Link href={`/destinations/${recentPlaces[currentRecentDestSlide]?.id || ''}`}>
+                <Box sx={{ position: 'absolute', top: '19%', left: '50%', transform: 'translate(-50%, -50%) scale(1.3)', zIndex: 15 }}>
+                  <Box
+                    component="img"
+                    src={`/images/buttons/view_details_button_${locale}.png`}
+                    alt="View Details"
+                    className="w-auto hover:scale-105 transition-transform duration-200"
+                    sx={{ height: vw(48, 'mobile'), objectFit: 'contain', display: 'block' }}
+                  />
+                </Box>
+              </Link>
+            </Box>
+
+            {/* Navigation Arrows */}
+            <Box
+              component="button"
+              onClick={prevRecentDestSlide}
+              disabled={currentRecentDestSlide === 0}
+              className={`group absolute left-0 transition-transform duration-200 ${currentRecentDestSlide === 0 ? 'opacity-40' : 'cursor-pointer'}`}
+              sx={{ zIndex: 30, top: '50%', transform: 'translateY(-50%)' }}
+            >
+              <Box
+                component="img"
+                src="/images/buttons/tab_prev.webp"
+                alt="Previous"
+                className={`w-auto ${currentRecentDestSlide === 0 ? '' : 'group-hover:hidden'}`}
+                sx={{ height: vw(96, 'mobile') }}
+              />
+              {currentRecentDestSlide !== 0 && (
+                <Box
+                  component="img"
+                  src="/images/buttons/tab_prev_hover.webp"
+                  alt="Previous"
+                  className="w-auto hidden group-hover:block"
+                  sx={{ height: vw(96, 'mobile') }}
+                />
+              )}
+            </Box>
+            <Box
+              component="button"
+              onClick={nextRecentDestSlide}
+              disabled={currentRecentDestSlide === recentPlaces.length - 1}
+              className={`group absolute right-0 transition-transform duration-200 ${currentRecentDestSlide === recentPlaces.length - 1 ? 'opacity-40' : 'cursor-pointer'}`}
+              sx={{ zIndex: 30, top: '50%', transform: 'translateY(-50%)' }}
+            >
+              <Box
+                component="img"
+                src="/images/buttons/tab_next.webp"
+                alt="Next"
+                className={`w-auto ${currentRecentDestSlide === recentPlaces.length - 1 ? '' : 'group-hover:hidden'}`}
+                sx={{ height: vw(96, 'mobile') }}
+              />
+              {currentRecentDestSlide !== recentPlaces.length - 1 && (
+                <Box
+                  component="img"
+                  src="/images/buttons/tab_next_hover.webp"
+                  alt="Next"
+                  className="w-auto hidden group-hover:block"
+                  sx={{ height: vw(96, 'mobile') }}
+                />
+              )}
+            </Box>
+
+            {/* Slide Indicators */}
+            <Box className="absolute left-1/2 -translate-x-1/2" sx={{ zIndex: 25, bottom: vw(32, 'mobile') }}>
+              <Box className="flex justify-center" sx={{ gap: vw(8, 'mobile') }}>
+                {recentPlaces.map((_, index) => (
+                  <Box
+                    key={index}
+                    component="button"
+                    onClick={() => setCurrentRecentDestSlide(index)}
+                    className={`rounded-full transition-colors duration-200 ${
+                      index === currentRecentDestSlide ? 'bg-white' : 'bg-white/50'
+                    }`}
+                    sx={{ width: vw(12, 'mobile'), height: vw(12, 'mobile') }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Box>
+
+          {/* MD+ Layout - Desktop Carousel */}
+          <Box
+            sx={{
+              display: { xs: 'none', md: 'block' },
+              position: 'relative',
+              width: '100vw',
+              left: '50%',
+              marginLeft: '-50vw',
+              marginTop: vw(32),
+              aspectRatio: '1920/800'
+            }}
+          >
+            {/* Background */}
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: 'url(/images/backgrounds/destination_background.webp)',
+                backgroundSize: '100% 100%',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                zIndex: 0,
+              }}
+            />
+
+            {/* Masked destination image - left edge */}
+            <Box sx={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 25 }}>
+              <Box
+                className={`transition-transform duration-300 ease-in-out ${
+                  isRecentDestTransitioning ? '-translate-x-full' : 'translate-x-0'
+                }`}
+                sx={{
+                  width: vw(768),
+                  height: vw(768),
+                  backgroundImage: `url(${recentPlaces[currentRecentDestSlide]?.image || ''})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  WebkitMaskImage: 'url(/images/masks/homepage_journey_image_mask.webp)',
+                  maskImage: 'url(/images/masks/homepage_journey_image_mask.webp)',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center'
+                }}
+              />
+              {isRecentDestTransitioning && (
+                <Box
+                  className="absolute top-0 left-0 transition-transform duration-300 ease-in-out -translate-x-full animate-slide-in"
+                  sx={{
+                    width: vw(768),
+                    height: vw(768),
+                    backgroundImage: `url(${recentPlaces[currentRecentDestSlide]?.image || ''})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    WebkitMaskImage: 'url(/images/masks/homepage_journey_image_mask.webp)',
+                    maskImage: 'url(/images/masks/homepage_journey_image_mask.webp)',
+                    WebkitMaskSize: 'contain',
+                    maskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskPosition: 'center'
+                  }}
+                />
+              )}
+            </Box>
+
+            {/* Destination Card Overlay */}
+            <Box
+              className="absolute top-1/2 -translate-y-1/3"
+              sx={{
+                left: vw(250),
+                zIndex: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: vw(24)
+              }}
+            >
+              <Box sx={{ position: 'relative', width: vw(1100) }}>
+                <Box
+                  component="img"
+                  src="/images/destinations/destination_popup_card.webp"
+                  alt="Card"
+                  sx={{ width: vw(1100), height: 'auto', display: 'block' }}
+                />
+                <Box sx={{ position: 'absolute', top: '0%', left: '70%', transform: 'translate(-50%, -50%)', width: '65%' }}>
+                  <Box
+                    component="img"
+                    src="/images/destinations/destination_location_title_black.webp"
+                    alt="Location"
+                    sx={{ width: '100%', height: 'auto', display: 'block' }}
+                  />
+                  <MixedText
+                    text={locale === 'zh' && recentPlaces[currentRecentDestSlide]?.nameCN ? recentPlaces[currentRecentDestSlide]?.nameCN : recentPlaces[currentRecentDestSlide]?.name || ''}
+                    chineseFont="MarioFontTitleChinese, sans-serif"
+                    englishFont="MarioFontTitle, sans-serif"
+                    fontSize={vw(40)}
+                    color="#FFD701"
+                    component="h3"
+                    sx={{
+                      margin: 0,
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      whiteSpace: 'nowrap',
+                      textAlign: 'center',
+                      width: '100%'
+                    }}
+                  />
+                </Box>
+                <Box sx={{ position: 'absolute', top: '60%', left: '70%', transform: 'translate(-50%, -50%)', width: '50%', textAlign: 'center' }}>
+                  <Box component="p" sx={{ fontFamily: `${locale === 'zh' ? 'MarioFontChinese' : 'MarioFont'}, sans-serif`, fontSize: vw(28), color: '#373737', marginBottom: vw(4), marginTop: 0 }}>
+                    {locale === 'zh' && recentPlaces[currentRecentDestSlide]?.journeyNameCN ? recentPlaces[currentRecentDestSlide]?.journeyNameCN : recentPlaces[currentRecentDestSlide]?.journeyName || ''}
+                  </Box>
+                  <Box component="p" sx={{ fontFamily: `${locale === 'zh' ? 'MarioFontChinese' : 'MarioFont'}, sans-serif`, fontSize: vw(26), color: '#373737', marginBottom: 0, marginTop: 0 }}>
+                    {recentPlaces[currentRecentDestSlide]?.date || ''}
+                  </Box>
+                </Box>
+              </Box>
+              <Box
+                component="a"
+                href={`/destinations/${recentPlaces[currentRecentDestSlide]?.id || ''}`}
+                className="inline-block hover:scale-105 transition-transform duration-200"
+                sx={{ marginLeft: vw(400) }}
+              >
+                <Box
+                  component="img"
+                  src={`/images/buttons/view_details_button_${locale}.png`}
+                  alt="View Details"
+                  sx={{ height: vw(70), width: 'auto', display: 'block', objectFit: 'contain' }}
+                />
+              </Box>
+            </Box>
+
+            {/* Navigation Arrows */}
+            <Box
+              component="button"
+              onClick={prevRecentDestSlide}
+              disabled={currentRecentDestSlide === 0}
+              className={`group absolute top-1/2 -translate-y-1/2 transition-transform duration-200 ${currentRecentDestSlide === 0 ? 'opacity-40' : 'hover:scale-110'}`}
+              sx={{ zIndex: 30, left: vw(32), padding: vw(24) }}
+            >
+              <Box component="img" src="/images/buttons/arrow_prev.webp" alt="Previous" className={`${currentRecentDestSlide === 0 ? '' : 'group-hover:hidden'}`} sx={{ width: vw(64), height: vw(64) }} />
+              <Box component="img" src="/images/buttons/arrow_prev_hover.webp" alt="Previous" className={`${currentRecentDestSlide === 0 ? 'hidden' : 'hidden group-hover:block'}`} sx={{ width: vw(64), height: vw(64) }} />
+            </Box>
+            <Box
+              component="button"
+              onClick={nextRecentDestSlide}
+              disabled={currentRecentDestSlide === recentPlaces.length - 1}
+              className={`group absolute top-1/2 -translate-y-1/2 transition-transform duration-200 ${currentRecentDestSlide === recentPlaces.length - 1 ? 'opacity-40' : 'hover:scale-110'}`}
+              sx={{ zIndex: 30, right: vw(32), padding: vw(24) }}
+            >
+              <Box component="img" src="/images/buttons/arrow_next.webp" alt="Next" className={`${currentRecentDestSlide === recentPlaces.length - 1 ? '' : 'group-hover:hidden'}`} sx={{ width: vw(64), height: vw(64) }} />
+              <Box component="img" src="/images/buttons/arrow_next_hover.webp" alt="Next" className={`${currentRecentDestSlide === recentPlaces.length - 1 ? 'hidden' : 'hidden group-hover:block'}`} sx={{ width: vw(64), height: vw(64) }} />
+            </Box>
+
+            {/* Slide Indicators */}
+            <Box className="absolute left-1/2 -translate-x-1/2" sx={{ zIndex: 25, bottom: vw(32) }}>
+              <Box className="flex justify-center" sx={{ gap: vw(8) }}>
+                {recentPlaces.map((_, index) => (
+                  <Box
+                    key={index}
+                    component="button"
+                    onClick={() => setCurrentRecentDestSlide(index)}
+                    className={`rounded-full transition-colors duration-200 ${
+                      index === currentRecentDestSlide ? 'bg-white' : 'bg-white/50'
+                    }`}
+                    sx={{ width: vw(12), height: vw(12) }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+      )}
 
       {/* Map View Section */}
       <Box
