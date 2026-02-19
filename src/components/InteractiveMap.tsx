@@ -157,8 +157,6 @@ export default function InteractiveMap({ places, isDetailView = false, routeCoor
       zoomControl: true,
       // On mobile, disable single-finger drag so the page scrolls normally
       dragging: !isMobile,
-      // Disable tap (single-finger) on mobile to avoid accidental interactions
-      tap: !isMobile,
     })
     mapRef.current = map
 
