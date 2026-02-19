@@ -154,9 +154,59 @@ export default function InteractiveMap({ places, isDetailView = false, routeCoor
     const map = L.map(mapContainerRef.current, {
       center: center,
       zoom: mapZoom,
-      zoomControl: true
+      zoomControl: true,
+      // On mobile, disable single-finger drag so the page scrolls normally
+      dragging: !isMobile,
+      // Disable tap (single-finger) on mobile to avoid accidental interactions
+      tap: !isMobile,
     })
     mapRef.current = map
+
+    // On mobile, enable dragging only with two fingers
+    if (isMobile && mapContainerRef.current) {
+      const container = mapContainerRef.current
+      let hintTimeout: ReturnType<typeof setTimeout> | null = null
+
+      const showHint = () => {
+        const existing = container.querySelector('.two-finger-hint')
+        if (existing) {
+          (existing as HTMLElement).style.opacity = '1'
+        } else {
+          const hint = document.createElement('div')
+          hint.className = 'two-finger-hint'
+          hint.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);color:#F6F6F6;font-family:MarioFont,MarioFontChinese,sans-serif;font-size:16px;z-index:1000;pointer-events:none;transition:opacity 0.3s;text-align:center;padding:20px;'
+          hint.textContent = locale === 'zh' ? '请用两根手指移动地图' : 'Use two fingers to move the map'
+          container.style.position = 'relative'
+          container.appendChild(hint)
+        }
+        if (hintTimeout) clearTimeout(hintTimeout)
+        hintTimeout = setTimeout(() => {
+          const el = container.querySelector('.two-finger-hint') as HTMLElement
+          if (el) el.style.opacity = '0'
+        }, 1500)
+      }
+
+      const onTouchStart = (e: TouchEvent) => {
+        if (e.touches.length >= 2) {
+          map.dragging.enable()
+        } else {
+          map.dragging.disable()
+          showHint()
+        }
+      }
+      const onTouchEnd = () => {
+        map.dragging.disable()
+      }
+
+      container.addEventListener('touchstart', onTouchStart, { passive: true })
+      container.addEventListener('touchend', onTouchEnd, { passive: true })
+
+      // Store cleanup references on the map object
+      ;(map as any)._twoFingerCleanup = () => {
+        container.removeEventListener('touchstart', onTouchStart)
+        container.removeEventListener('touchend', onTouchEnd)
+      }
+    }
 
     // Add tile layer with light gray theme
     // Allow more zoom out on mobile (minZoom 3) vs desktop (minZoom 4)
@@ -1037,6 +1087,9 @@ export default function InteractiveMap({ places, isDetailView = false, routeCoor
 
     // Cleanup
     return () => {
+      if ((map as any)._twoFingerCleanup) {
+        (map as any)._twoFingerCleanup()
+      }
       map.remove()
     }
   }, [places, isDetailView, routeCoordinates, routeSegments, homeLocations, locale, journeyDate, isMobile, drawSegmentsIndependently])

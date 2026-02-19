@@ -41,6 +41,7 @@ interface Journey {
   visitedPlaceIds?: string[]
   journeyId?: string
   startDate?: string
+  endDate?: string
   segments?: Array<{
     order: number
     from: { name: string; lat: number; lng: number }
@@ -337,6 +338,18 @@ export default function JourneyDetailClient({ journey }: JourneyDetailClientProp
         <Box sx={{ maxWidth: { xs: 'none', md: vw(1280) }, marginLeft: 'auto', marginRight: 'auto', paddingLeft: rvw(16, 32), paddingRight: rvw(16, 32) }}>
           {/* Journey Title with Background */}
           <Box sx={{ width: '100%', maxWidth: { xs: 'none', md: vw(800) }, margin: `${vw(32)} auto ${vw(32)}` }}>
+            {/* Date Range */}
+            {journey.startDate && journey.endDate && (
+              <MixedText
+                text={`${journey.startDate} — ${journey.endDate}`}
+                chineseFont="MarioFontTitleChinese, sans-serif"
+                englishFont="MarioFontTitle, sans-serif"
+                fontSize={rvw(14, 20)}
+                color="#FFD701"
+                component="p"
+                sx={{ textAlign: 'center', margin: 0, marginBottom: rvw(8, 12) }}
+              />
+            )}
             <Box sx={{ position: 'relative', width: '100%', marginBottom: rvw(32, 32) }}>
               <Box
                 component="img"
