@@ -311,7 +311,6 @@ export default function FoodDetailClient({ food, destination, journey }: FoodDet
         isMenuButtonAnimating={isMenuButtonAnimating}
         openMenu={openMenu}
         closeMenu={closeMenu}
-        currentPage="foods"
       />
       <ViewHintsDrawer
         isOpen={isViewHintsDrawerOpen}
@@ -754,7 +753,7 @@ export default function FoodDetailClient({ food, destination, journey }: FoodDet
           </Box>
         </Box>
 
-        <Footer currentPage="foods" />
+        <Footer />
       </Box>
     </Box>
   )
